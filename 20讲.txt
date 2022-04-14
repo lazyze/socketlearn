@@ -1,0 +1,31 @@
+20讲
+
+select()多路复用
+
+报错：bind failed : Address already in use (48)
+分析：端口被占用
+查看端口情况命令 lsof -i:端口号 
+lsof - i：43211
+杀死对应进程 kill -9 PID
+kill -9 
+
+
+21讲
+
+poll()多路复用
+select()方法的缺点是所支持的文件描述符的个数是有限的，在linux系统中的默认最大值为1024
+
+//int poll(struct pollfd *fds, unsigned long nfds, int timeout)；
+//返回值：若有就绪描述符则为其数目，若超时则为0， 若出错则为-1
+
+struct pollfd {
+    int fd;
+    short events;
+    short revents;
+}
+
+
+
+
+
+

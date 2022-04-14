@@ -21,12 +21,18 @@ int main(int argc, char **argv) {
     for (;;) {
         readmask = allreads;
         int rc = select(socket_fd + 1, &readmask, NULL, NULL, NULL);
+        //int select(int maxfd, fd_set *readset, fd_set *writeset, fd_set *exceptset, const struct timeval *timeout);
+
+        //FD_ZERO(fd_set *fdset)
+        //FD_SET(int fd, fd_set *fdset)
+        //...
 
         if (rc <= 0) {
             error(1, errno, "select failed");
         }
 
         if (FD_ISSET(socket_fd, &readmask)) {
+            printf("套接字路有事件发生\n");
             n = read(socket_fd, recv_line, MAXLINE);
             if (n < 0) {
                 error(1, errno, "read error");
@@ -39,6 +45,7 @@ int main(int argc, char **argv) {
         }
 
         if (FD_ISSET(STDIN_FILENO, &readmask)) {
+            printf("标准输入路有事件发生\n");
             if (fgets(send_line, MAXLINE, stdin) != NULL) {
                 int i = strlen(send_line);
                 if (send_line[i - 1] == '\n') {

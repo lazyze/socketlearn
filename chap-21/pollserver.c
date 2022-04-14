@@ -24,8 +24,11 @@ int main(int argc, char **argv) {
 
     for (;;) {
         if ((ready_number = poll(event_set, INIT_SIZE, -1)) < 0) {
+            //int poll(struct pollfd *fds, unsigned long nfds, int timeout)
+            //返回值：若有就绪描述符则为其数目，若超时则为0， 若出错则为-1
             error(1, errno, "poll failed ");
         }
+
 
         if (event_set[0].revents & POLLRDNORM) {
             socklen_t client_len = sizeof(client_addr);
