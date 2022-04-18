@@ -28,4 +28,59 @@ struct pollfd {
 
 
 
+22讲
+
+//设置文件描述符fd为非阻塞
+fcntl(fd, F_SETFL, O_NONBLOCK);
+
+23讲
+
+epoll的用法
+epoll不仅提供默认的level-triggered（条件触发）
+还提供性能更强劲的edge-triggered（边缘触发）
+
+epoll_create
+int epoll_create(int size);
+int epoll_create1(int flag);
+返回值：若成功返回一个大于0的值，表示epoll实例；若返回-1表示出错
+
+epoll_ctl
+int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);
+通过调用epoll_ctl往这个epoll实例增加和删除监控的事件
+第一个参数 epfd是刚刚调用epoll_create创建的epoll实例描述字，简单理解成epoll句柄。
+第二个参数 表示增加还是删除一个事件
+ EPOLL_CTL_ADD 添加
+ EPOLL_CTL_DEL 删除
+ EPOLL_CTL_MOD 修改文件描述符对应的事件
+第三个参数是注册的事件的文件描述符
+第四个参数表示的注册的事件类型
+
+poll基于mask的事件类型，几种事件类型：
+EPOLLIN 表示对应的文件描述字可以读
+EPOLLOUT 表示对应的文件描述字可以写
+EPOLLRDHUP 表示套接字的一端已经关闭，或者半关闭
+EPOLLHUP 表示对应的文件描述字被挂起
+EPOLLET 设置为edge-triggered，默认为level-triggered（条件触发）
+
+epoll_wait
+int epoll_wait(int epfd, struct epoll_event * events, int maxevents, int timeout)
+类似poll和select函数，调用者进程被挂起，在等待内核I/O事件的分发
+第一个参数 epfd实例描述字
+第二个参数 返回给用户空间需要处理的I/O事件
+第三个参数 一个大于0的整数，表示epoll_wait可以返回的最大事件值
+第四个参数 epoll_wait阻塞调用的超时值，如果设置为-1，表示不超时；如果设置为0则立即返回，即使没有任何I/O事件发生
+
+typedef union epoll_data {
+    void *ptr;
+    int fd;
+    uint32_t u32;
+    uint64_t u64;
+} epoll_data_t;
+
+struct epoll_event {
+    uint32_t events;
+    epoll_data_t data;
+}
+
+
 

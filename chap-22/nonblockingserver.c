@@ -3,6 +3,7 @@
 #define MAX_LINE 1024
 #define FD_INIT_SIZE 128
 
+//转换字符
 char rot13_char(char c) {
     if ((c >= 'a' && c <= 'm') || (c >= 'A' && c <= 'M'))
         return c + 13;
@@ -44,6 +45,7 @@ int onSocketRead(int fd, struct Buffer *buffer) {
     ssize_t result;
     while (1) {
         result = recv(fd, buf, sizeof(buf), 0);
+        //printf("收到数据buf = %s, result = %d\n", buf, result);
         if (result <= 0)
             break;
 
@@ -103,6 +105,7 @@ int main(int argc, char **argv) {
         buffer[i] = alloc_Buffer();
     }
 
+    //非阻塞套接字
     listen_fd = tcp_nonblocking_server_listen(SERV_PORT);
 
     fd_set readset, writeset, exset;
@@ -131,10 +134,12 @@ int main(int argc, char **argv) {
             }
         }
 
+        //select()多路复用
         if (select(maxfd + 1, &readset, &writeset, &exset, NULL) < 0) {
             error(1, errno, "select error");
         }
 
+        //发送客户端连接，保存连接描述符
         if (FD_ISSET(listen_fd, &readset)) {
             printf("listening socket readable\n");
             sleep(5);
@@ -156,6 +161,7 @@ int main(int argc, char **argv) {
             }
         }
 
+        //处理客户端连接消息
         for (i = 0; i < maxfd + 1; ++i) {
             int r = 0;
             if (i == listen_fd)

@@ -21,13 +21,16 @@ int main(int argc, char **argv) {
 
     listen_fd = tcp_nonblocking_server_listen(SERV_PORT);
 
+    //创建epoll实例
     efd = epoll_create1(0);
     if (efd == -1) {
         error(1, errno, "epoll create failed");
     }
 
+    //服务端监听套接字
     event.data.fd = listen_fd;
     event.events = EPOLLIN | EPOLLET;
+    //添加事件
     if (epoll_ctl(efd, EPOLL_CTL_ADD, listen_fd, &event) == -1) {
         error(1, errno, "epoll_ctl add listen fd failed");
     }
@@ -36,9 +39,11 @@ int main(int argc, char **argv) {
     events = calloc(MAXEVENTS, sizeof(event));
 
     while (1) {
+        //类似poll()和select(),返回事件个数
         n = epoll_wait(efd, events, MAXEVENTS, -1);
         printf("epoll_wait wakeup\n");
         for (i = 0; i < n; i++) {
+            //非注册添加的事件，关闭描述符
             if ((events[i].events & EPOLLERR) ||
                 (events[i].events & EPOLLHUP) ||
                 (!(events[i].events & EPOLLIN))) {
@@ -46,6 +51,7 @@ int main(int argc, char **argv) {
                 close(events[i].data.fd);
                 continue;
             } else if (listen_fd == events[i].data.fd) {
+                //存在新连接
                 struct sockaddr_storage ss;
                 socklen_t slen = sizeof(ss);
                 int fd = accept(listen_fd, (struct sockaddr *) &ss, &slen);
@@ -55,12 +61,14 @@ int main(int argc, char **argv) {
                     make_nonblocking(fd);
                     event.data.fd = fd;
                     event.events = EPOLLIN | EPOLLET; //edge-triggered
+                    //添加事件
                     if (epoll_ctl(efd, EPOLL_CTL_ADD, fd, &event) == -1) {
                         error(1, errno, "epoll_ctl add connection fd failed");
                     }
                 }
                 continue;
             } else {
+                //已连接数据接收，可读事件
                 socket_fd = events[i].data.fd;
                 printf("get event on socket fd == %d \n", socket_fd);
                 while (1) {
@@ -70,6 +78,7 @@ int main(int argc, char **argv) {
                             error(1, errno, "read error");
                             close(socket_fd);
                         }
+                        //无数据可读，正常跳出循环
                         break;
                     } else if (n == 0) {
                         close(socket_fd);
